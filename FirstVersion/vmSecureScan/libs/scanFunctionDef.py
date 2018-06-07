@@ -31,6 +31,7 @@ def get_runPath():
 def get_resultPath():
     return scanFunctionDef.resultPath
 
+#从csv中获取配置信息
 def getSystemInfo():
     systemInfo = []
     filename = get_csvFilename()
@@ -43,7 +44,7 @@ def getSystemInfo():
         return False
     return systemInfo
 
-
+#输出结果文件的路径及格式
 def resultFile(ip,sysName,shName):
     path = get_runPath()
     time = get_localTime()
@@ -72,6 +73,7 @@ def resultFile(ip,sysName,shName):
         file.close()
     return fileName
 
+#从script文件夹中获取要执行的Linux脚本
 def getScript():
     workPath = get_runPath()
     path = workPath+'/config/script'
@@ -84,12 +86,12 @@ def getScript():
             continue
         shlist[i] = path + "/" + shlist[i]
         i = i+1
-    
     return shlist
 
 def runAll():
+    #先获取配置信息
     vmInfo = getSystemInfo()
-    
+    #检测配置信息是否正确
     i = 0
     while i < len(vmInfo)-1:
         x = vmInfo[i]
@@ -112,14 +114,15 @@ def runAll():
             del vmInfo[i]
             continue
         i = i+1
-    
+        
+    #获取要执行的Linux脚本
     shScripts = getScript()
     for sct in shScripts:
         shName = sct.split("/")[-1]
         if ".sh" not in sct:
             continue
         print " "*4+"Run {shName}".format(shName=shName)
-        
+        #对脚本中特殊字符进行python格式转义
         file = open(sct)
         info = file.read()
         #if '\n' in info:
@@ -132,7 +135,7 @@ def runAll():
             info = info.replace('"', '\\"')
         if '`' in info:
             info = info.replace('`', '\\`')
-        
+    #执行脚本部分，先拿出一条脚本到不同虚机节点执行，再切换下一条脚本    
         for x in vmInfo:
             ip = x[0]
             sysName = x[1]
