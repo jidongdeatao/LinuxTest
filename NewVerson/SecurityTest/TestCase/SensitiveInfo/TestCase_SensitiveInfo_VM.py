@@ -106,7 +106,7 @@ def adaptIgnoreDirs(ignoreDir):
         dirs = dirs+" -path {dir} -prune -o".format(dir=d)
     return dirs
 
-def adaptIgnoreKeysExcel(ignoreKeySheet):
+def adaptIgnoreKeysExcel(ignoreKeySheet): 
     keys = ""
     try:
         excel = ExcelOperate.Excel(excelName=scanPolicyExcel,sheetName=ignoreKeySheet)
@@ -123,7 +123,7 @@ def adaptIgnoreKeysExcel(ignoreKeySheet):
         g_Log.writeLog("traceback")
     return keys
 
-def scan_in_MV():
+def scan_in_VM(): # 定义扫描虚机的方法
     for vm in g_vmInfo:
         try:
             vmIP = vm[0]
@@ -135,7 +135,7 @@ def scan_in_MV():
             tLinux = LinuxOperate.Linux(ip=vmIP,name=vmName,user=vmUser,password=vmUserPasswd,suRoot=vmSuRoot,rootPassword=vmRootPasswd)
             tLinux.sendRootCommand("rm -rf /tempScanVM")
             for scan in g_scanPolicy:
-                name = scan[1]
+                name = scan[1] #这个是用来配置虚机中脚本的名称
                 policy = scan[2]
                 fileType = scan[3]
                 workDir = scan[4]
@@ -147,6 +147,7 @@ def scan_in_MV():
                 cmd = ""
                 for dir in dirs:
                     #tLinux = LinuxOperate.Linux(ip=vmIP,name=vmName,user=vmUser,password=vmUserPasswd,suRoot=vmSuRoot,rootPassword=vmRootPasswd)
+                    #这里info 与 下面的cmd 是用来配置 在 Linux中 执行的命令
                     info = "find {dir} {iDir} -type f {scanFile} | xargs file|grep -E 'text|XML|PC bitmap data'|awk '{p}'|sed 's/:$//g'|xargs grep -i -n -E -H \"{key}\" |egrep -i -v \"/devicemapper/mnt/|Binary file|/usr/lib(64|)/python2\.7/|tempScan\" {uselessWords} 2>/dev/null".format(dir=dir,key=policy,p="{print $1}",scanFile=appointFiles,iDir=ignoreDirs,uselessWords=uselessWords)
                     if "FIND_Password" in name:
                         info = info.replace("-i -n -E -H","-i -a -n -E -H")
@@ -336,7 +337,7 @@ def run():
     try:
         ''''''''' 可以在此处下方添加自己的代码 '''''''''
         getScanPolicy()
-        scan_in_MV()
+        scan_in_VM()
     except:
         g_Log.writeLog("traceback")
         return 0
