@@ -1,0 +1,62 @@
+VM中的扫描结果查看规则如下：
+1、VM_debugModel：查看是否有Bash-x或Set-X存在；
+    在《Shell语言安全编程规范_V1_0.docx》中要求禁止使用调试模式执行shell脚本，调试模式执行shell脚本，虽然能比较方便的查看脚本执行过程以及数据信息，但也会暴露相关的数据，包括可能的敏感信息，存在被利用的风险，调试模式有两种：
+        a)命令行调用shell脚本时使用选项“-x”，如“bash -x test.sh”
+        b)在shell脚本中使用命令“set -x”打开调试模式。
+
+2、VM_fileaccess：文件权限（此处扫描要求是对文件权限最宽泛的要求，有些特殊文件需要更严格的权限限制，应按照基线用例，从严测试）
+   某规范要求系统中所有目录文件必须进行访问权限控制，遵从权限最小化原则。以Unix/Linux系统为例：
+        1）敏感文件不得大于600（rw------）对于多个OS用户都需要访问敏感文件的场景都不得大于640（rw-r-----），如：数据库备份恢复
+        2）日志文件不得大于640（rw-r-----）
+        3）不可执行文件不得大于640（rw-r-----）
+        4）可执行文件不得大于750（rwxr-x---）
+        5）目录不得大于750（rwxr-x---），有时候目录要求不能大于700（rwx------）
+        注意：对于.conf、.json、.bat三种文件的扫描结果需要进一步手动判断，如果不包含敏感信息，权限为不大于640，如果含有敏感信息，则权限不能大于600
+
+3、JSX_Language：解释性语言
+    某规范要求严禁使用注释行等形式仅使功能失效，当代码中被注释掉的语句去除掉注释性符号后不会对原有代码的功能造成影响（即：注释的代码不是功能语句，只能是解释说明）
+
+4、VM_nouser：无属主文件
+    某规范要求禁止存在缺乏权限控制的无属主文件，搜索出来的所有问题需开发定位。
+
+5、VM_Password：明文密码
+    脚本默认扫描根目录，扫描相当缓慢（出现过一台虚机扫描了1小时），建议根据产品情况谨慎指定扫面的目录。
+    搜索明文密码关键字“C1oudc0w|z9a3Pa55|PaaS#|a123456|FusionSphere123|root|admin|abc|abcd|Password|Changeme|Test|Administrator|123”（见实际扫描脚本VM_Password.sh）
+
+6、VM_Sensitive：敏感信息
+    搜索敏感信息关键字“pass|password|passwd|pswd|mima|key|pwd|PINNUMBER|secret|crypto|encrypt|decrypt|X-Auth-Token|Authorization|sessionID|token|email|mobile|ak|sk|akey|skey|accesskey|secretkey|access_key|secret_key”（见实际扫描脚本VM_Sensitive.sh）
+    脚本默认扫描根目录，扫描相当缓慢（出现过一台虚机扫描了8小时），建议根据产品情况谨慎指定扫面的目录。
+    提醒：
+        a）当搜索出来的关键字的值为变量时（如key=code、password=$code等等），也需要分析变量（code）是否有风险
+        b）日志文件中既不能有明文，也不能有密文密码密钥信息，日志中写入密文，要做匿名化处理
+        c）进一步检查含有密码和敏感信息的文件，文件权限是否限制在600以内
+
+7、VM_unsafe_encrypt文件：根据搜索关键字DES|3DES|SKIPJACK|RC2|RSA|MD2|MD4|MD5|SHA1，查看是否含有不安全加密算法，原则：
+        1、禁止使用业界已知不安全的加密算法,DES/3DES（除密钥K1≠K2≠K3外的场景）/SKIPJACK/RC2/RSA（1024位及以下）/MD2/MD4。
+        说明：
+            1）禁止MD5应用在参与生成“数字签名口令加密保存”这两种场景（HMAC-MD5例外），禁止SHA1应用在参与生成“数字签名”的场景；
+            2）SHA1算法可用于HMAC、PBKDF2、随机数发生器的场景；
+            3）标准协议定义且没有替代算法的、或需要与第三方系统对接、或兼容老系统的除外。如需要与第三方系统对接或兼容老系统，产品支持使用不安全密码算法的情况，对于面向运营商和企业客户的产品，应在产品CPI资料或界面中提示风险。
+        2、推荐使用的密码算法：
+           1）分组密码算法：AES（密钥长度在128位及以上）
+           2）流密码算法：AES（密钥长度在128位及以上）（OFB或CTR模式）
+           3）非对称加密算法：RSA（密钥长度在2048位及以上)
+           4）哈希算法：SHA2（256位及以上）
+           5）密钥交换算法：DH（2048位及以上)
+           6）HMAC（基于哈希的消息验证码）算法：HMAC-SHA2
+        3、缺省使用安全的加密算法，如客户选择不安全的加密算法，应提示安全风险。
+
+
+8、VM_SensitiveInPross：进程中的敏感信息
+    搜索敏感信息关键字“pass|password|passwd|pswd|mima|key|pwd|PINNUMBER|secret|X-Auth-Token|Authorization|sessionID|token”（见实际扫描脚本VM_SensitiveInPross.sh）
+    进程中不能含有明文密码和认证信息
+
+9、VM_Pross：排查启动权限过大的进程
+
+10、VM_CertificateInLog.sh：日志中的认证信息
+    搜索敏感信息关键字“certificate|auth|session|token|key|ak|sk”（见实际扫描脚本VM_CertificateInLog.sh）
+
+11、VM_UserNameInLog.sh：日志中的租户名
+    租户名可能会是手机号或者邮箱，所以日志中的租户名需要隐匿打印。当前搜索关键字是“op_svc_sc_customer_hws|un|dn”，所有打印了该租户名的日志，都需要开发确认是否有隐匿手机号、邮箱等客户信息的机制
+    
+12、VM_DockerPS：查询虚机上所有容器信息，用于容器相关的扫描结果分类提单，本身不是软件问题，不用排查！！！
