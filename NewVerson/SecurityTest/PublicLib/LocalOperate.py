@@ -1,5 +1,5 @@
 #-*- coding: utf-8 -*-
-__author__ = 'jWX350731'
+
 import sys
 import datetime
 import os
