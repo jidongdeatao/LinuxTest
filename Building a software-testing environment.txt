@@ -55,3 +55,6 @@ pip install pymysql
 pip install pyyaml
 pip install openpyxl
 pip install docx
+
+使用pip卸载已安装的包
+pip uninstall 库名，然后使用pip list 可以查看是否已卸载成功
