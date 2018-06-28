@@ -48,6 +48,8 @@ index-url = http://rnd-mirrors.huawei.com/pypi/simple/
 trusted-host=rnd-mirrors.huawei.com
 
 其它支撑包：
+pip install ecdsa
+pip install paramiko
 pip install xlrd
 pip install xlwt
 pip install xlutils
