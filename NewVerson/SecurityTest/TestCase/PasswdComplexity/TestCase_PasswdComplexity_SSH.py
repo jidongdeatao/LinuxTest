@@ -1,5 +1,5 @@
 #-*- coding: utf-8 -*-
-__author__ = 'jWX350731'
+
 import sys
 import os
 import traceback
@@ -12,7 +12,22 @@ from sys import path
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
+'''
+""" 相关安全要求说明 """
+《01 产品网络安全红线落地解读及指导V2_1.xls》 8.1.1 系统自身操作维护类口令满足“口令安全要求”。
+'''
+'''
+""" 脚本功能 """
+检查操作系统的账号密码安全
+'''
+'''
+""" 脚本配置执行说明 """
+配置1：/SecurityTest/Config/config.xlsx，“vmInfo”页
+'''
 
+'''
+""" 可以在此处下方添加自己的代码（函数） """
+'''
 try:
     g_Log = None
     g_Global = None
@@ -108,7 +123,12 @@ def check_in_Docker(linuxSSH,containerInfo):  #测试容器中系统账号的口
             cmd = "netstat -tunlp |grep :22"
             out2 = linuxSSH.sendRootCommand("docker exec -u 0 {id} {cmd}".format(id=id,cmd=cmd),timeout=10)
             if out2!=False and out2[0]!="":
-                errInfo.append( [linuxSSH.ip,u"Docker",u"{image}".format(image=image),u"{conf}".format(conf=out2[0]),u"容器中打开了22端口，可能支持ssh登陆，存在安全风险".format(user=user,ip=ip_container),"Fail",u"以往都不支持SSH登陆，需要考虑风险"] )
+                errInfo.append( [linuxSSH.ip,u"Docker",u"{image}".format(image=image),u"{conf}".format(conf=out2[0]),u"容器中打开了22端口，可能支持ssh登陆，存在安全风险".format(user=user,ip=ip_container),"Fail",u""] )
+
+            cmd = "netstat -tunlp |grep :2375"
+            out2 = linuxSSH.sendRootCommand("docker exec -u 0 {id} {cmd}".format(id=id,cmd=cmd),timeout=10)
+            if out2!=False and out2[0]!="":
+                errInfo.append( [linuxSSH.ip,u"Docker",u"{image}".format(image=image),u"{conf}".format(conf=out2[0]),u"容器中打开了2375默认远程访问端口，存在安全风险".format(user=user,ip=ip_container),"Fail",u""] )
 
             cmd = "cat /etc/passwd |egrep \"[0-9]{4}|^root\""
             output = linuxSSH.sendRootCommand("docker exec -u 0 {id} {cmd}".format(id=id,cmd=cmd),timeout=10)
